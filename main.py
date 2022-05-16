@@ -1,16 +1,28 @@
-# This is a sample Python script.
+import tkinter as tk
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+frame_page: dict(str, tk.Frame) = {}
 
 
-# Press the green button in the gutter to run the script.
+def show(title: str) -> None:
+    """
+    The function to raise a specific frame that is already initialized
+    :param title: the title of the frame we want to show
+    """
+    if not title in frame_page.keys():
+        raise Exception("There is no frame with this title")
+    frame_page[title].tkraise()
+
+
+def main():
+    root = tk.Tk()
+    root.geometry("1600x900")
+    root.state("zoomed")
+
+    root.rowconfigure(0, weight=1)
+    root.columnconfigure(0, weight=1)
+
+    root.mainloop()
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()
