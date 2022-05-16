@@ -1,0 +1,11 @@
+# created by virtualenv automatically
+venv/
+Esperos.db
+Esperos.db-journal
+Esperos.sqbpro
+assets/
+Setup.py
+__pycache__/
+esperos.log
+setup.log
+run.bat
