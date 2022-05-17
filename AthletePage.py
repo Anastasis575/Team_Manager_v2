@@ -4,9 +4,13 @@ from tkinter import ttk
 
 from PIL import ImageTk, Image
 
+import Controller
+from ProjectList import ProjectList
+
 
 class AthletePage(tk.Frame):
-    def __init__(self, root, init_club: Callable[[], []], go_back: Callable[[], []], go_forward: Callable[[], []]):
+    def __init__(self, root, controller: Controller.LogicController, init_club: Callable[[], []],
+                 go_back: Callable[[], []], go_forward: Callable[[], []]):
         """
         Constructor for the athlete page
         :param root: the Tk object that acts like the root of the frame
@@ -15,14 +19,15 @@ class AthletePage(tk.Frame):
         :param go_forward: a callback function for going to the next page
         """
         super().__init__(root, bg="#4e73c2")
-        self.projectData = None
+        self.controller = controller
+        self.basicFrame = None
+        self.otherframe = None
         self.deleteEntry = None
         self.go_back = go_back
         self.go_forward = go_forward
         self.init_club = init_club
         self.forphoto: ImageTk = None
         self.backphoto: ImageTk = None
-        self.createEntry = None
         self.photo = None
         self.root = root
         self.initialize()
@@ -59,7 +64,7 @@ class AthletePage(tk.Frame):
 
         # Create button, to create a new entry
         self.createButton = tk.Button(self.headerFrame, bg="#c1c1c1", text="Δημιουργία Καινούργιας Εγγραφής",
-                                      command=self.createEntry, borderwidth=0)
+                                      command=self.controller.create_entry, borderwidth=0)
         self.createButton.config(font=("Arial", 16))
         self.createButton.place(relheight=0.15, relwidth=0.25, relx=0.3, rely=0.5)
 
@@ -69,16 +74,17 @@ class AthletePage(tk.Frame):
         self.deleteButton.config(font=("Arial", 16))
         self.deleteButton.place(relheight=0.15, relwidth=0.25, relx=0.3, rely=0.7)
 
-        # # Choice box about the category of the data
-        # options = ["Επιλέξτε μια κατηγορία μέλους"]
-        # for i in self.data["Κατηγορία"].unique():
-        #     options.append(str(i))
-        # self.formVar = tk.StringVar(self.headerFrame)
-        # self.formVar.set(options[0])
-        # self.forms = tk.OptionMenu(self.headerFrame, self.formVar, *options, command=self.updateForm)
-        # self.forms.config(font=("Arial", 18), bg="#c1c1c1")
-        # self.forms['menu'].config(font=("Arial", 18), bg="#c1c1c1")
-        # self.forms.place(relwidth=0.25, relheight=0.1, relx=0.58, rely=0.75)
+        # Choice box about the category of the data
+        options = ["Επιλέξτε μια κατηγορία μέλους"]
+        data = self.controller.get_categories_no_coach()
+        for i in data:
+            options.append(str(i))
+        self.formVar = tk.StringVar(self.headerFrame)
+        self.formVar.set(options[0])
+        self.forms = tk.OptionMenu(self.headerFrame, self.formVar, *options, command=self.update_form)
+        self.forms.config(font=("Arial", 18), bg="#c1c1c1")
+        self.forms['menu'].config(font=("Arial", 18), bg="#c1c1c1")
+        self.forms.place(relwidth=0.25, relheight=0.1, relx=0.58, rely=0.75)
 
         # List of data options
         # self.typeOptions = ["Στοιχεία"]
@@ -99,23 +105,43 @@ class AthletePage(tk.Frame):
                                     command=self.init_club,
                                     bg="#494949", fg="#fff")
         self.teamButton.config(font=("Arial", 36))
-        self.teamButton.place(relwidth=0.25, relheight=0.2, relx=0.025, rely=0.05)
+        self.teamButton.place(relwidth=0.2, relheight=0.2, relx=0.025, rely=0.05)
 
+        above_frame = tk.Frame(self.subHeaderFrame, bg="#1b2135")
+        above_frame.place(relheight=1, relwidth=0.75, relx=0.25, rely=0)
+        above_frame.rowconfigure(0, weight=1)
+        above_frame.columnconfigure(0, weight=1)
         # Main data frame for objects
-        basicFrame = tk.Frame(self.subHeaderFrame, bg="#1b2135")
-        basicFrame.place(relheight=1, relwidth=0.7, relx=0.3, rely=0)
-        self.mainCanvas = tk.Canvas(basicFrame)
+        self.otherframe = tk.Frame(above_frame, bg="red")
+        self.otherframe.grid(row=0, column=0, sticky="nsew")
+        self.basicFrame = tk.Frame(above_frame, bg="#1b2135")
+        self.basicFrame.grid(row=0, column=0, sticky="nsew")
+        self.mainCanvas = tk.Canvas(self.basicFrame)
         self.mainCanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.scroll = ttk.Scrollbar(basicFrame, command=self.mainCanvas.yview)
+        self.scroll = ttk.Scrollbar(self.basicFrame, command=self.mainCanvas.yview)
         self.scroll.pack(side=tk.RIGHT, fill=tk.Y)
         self.mainCanvas.configure(yscrollcommand=self.scroll.set)
         self.mainCanvas.bind("<Configure>",
                              lambda e: self.mainCanvas.configure(scrollregion=self.mainCanvas.bbox("all")))
         # self.listFrame = ItemList(self, self.data, "#1b2135")
-        # self.mainCanvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1060,
-        #                               height=1330)  # Be Careful
 
+        self.listFrame = tk.Frame(self.mainCanvas, bg="#1b2135")
+        self.mainCanvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1400,
+                                      height=1330)  # Be Careful
+
+        #TODO: add the data projections
+        self.projection = ProjectList(self.controller, self.otherframe)
+        self.projection.pack(expand=True, fill=tk.BOTH)
         self.ProjectButton = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
-                                       text="Εμφάνιση Λίστας Εκκρεμοτήττων", command=self.projectData, borderwidth=0)
+                                       text="Εμφάνιση Λίστας Εκκρεμοτήττων", command=self.project_data, borderwidth=0)
+
         self.ProjectButton.config(font=("Arial", 16))
-        self.ProjectButton.place(relwidth=0.25, relheight=0.15, relx=0.025, rely=0.45)
+        self.ProjectButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.45)
+        self.basicFrame.tkraise()
+
+    def project_data(self):
+        self.otherframe.tkraise()
+
+    def update_form(self):
+        # TODO: when you implement the item list
+        pass

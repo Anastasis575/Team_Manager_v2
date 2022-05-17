@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
+
+import pandas as pd
 from PIL import ImageTk, Image
 
 import Controller
@@ -72,14 +74,39 @@ class ProjectList(tk.Frame):
         self.treeview.heading("Εκκρεμμότητες", text="Εκκρεμμότητες", anchor=tk.W)
         self.treeview.heading("Ημέρες από Εξόφληση", text="Ημέρες από Εξόφληση", anchor=tk.W)
         self.treeview.pack(expand=True, fill=tk.BOTH)
-        self.refresh_treeview()
+        self.refresh_treeview(0)
         tree_scroll.config(command=self.treeview.yview)
 
     # def email(self):
     #    print(self.treeview.selection())
 
-    def refresh_treeview(self):
+    def refresh_treeview(self,value):
         if len(self.treeview.get_children()) != 0:
             for item in self.treeview.get_children():
                 self.treeview.delete(item)
-        data=self.controller.get_resoponsibility_information()
+        searchResults = self.projectVariable.get()
+        if searchResults.strip() == "":
+            self.projectVariable.set("Αναζήτηση")
+        count = 0
+        if searchResults != "Αναζήτηση":
+            data = self.controller.get_resoponsibility_information(searchResults)
+            for entry in data:
+                self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]] = ImageTk.PhotoImage(
+                    file="assets//state" + str(entry["Κατάσταση"]) + ".png")
+                self.treeview.insert(parent='', text="", image=self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]],
+                                     index=tk.END, iid=str(count), values=(
+                        entry["Επώνυμο"], entry["Όνομα"], entry["Κατηγορία"], entry["Σταθερό"], entry["Κινητό"],
+                        entry["Email"], entry["Εκκρεμότητες"],
+                        len(pd.date_range(start=entry["Πληρωμή"], end=pd.Timestamp.today(), freq="D")) - 1))
+                count += 1
+        else:
+            data = self.controller.get_resoponsibility_information()
+            for entry in data:
+                self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]] = ImageTk.PhotoImage(
+                    file="assets//state" + str(entry["Κατάσταση"]) + ".png")
+                self.treeview.insert(parent='', text="", image=self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]],
+                                     index=tk.END, iid=str(count), values=(
+                    entry["Επώνυμο"], entry["Όνομα"], entry["Κατηγορία"], entry["Σταθερό"], entry["Κινητό"],
+                    entry["Email"], entry["Εκκρεμότητες"],
+                    len(pd.date_range(start=entry["Πληρωμή"], end=pd.Timestamp.today(), freq="D")) - 1))
+                count += 1
