@@ -77,6 +77,6 @@ class MainWindowFrame(tk.Frame):
         backButton.place(relheight=0.225, relwidth=0.05, relx=0.9, rely=0.7)
 
         self.forphoto = ImageTk.PhotoImage(Image.open("assets\\next.png").resize((75, 75)))
-        forwardButton = tk.Button(headerFrame, image=self.forphoto, command=self.go_back, bg="light grey",
+        forwardButton = tk.Button(headerFrame, image=self.forphoto, command=self.go_forward, bg="light grey",
                                   borderwidth=0)
         forwardButton.place(relheight=0.225, relwidth=0.05, relx=0.95, rely=0.7)
