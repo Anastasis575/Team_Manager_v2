@@ -1,11 +1,16 @@
 import tkinter as tk
 from collections.abc import Callable
 
-from PIL import ImageTk,Image
+from PIL import ImageTk, Image
+
+import Controller
+
 
 class ClubPage(tk.Frame):
-    def __init__(self,root:tk.Tk,init_athletes:Callable[[],[]],go_back:Callable[[],[]],go_forward:Callable[[],[]]):
+    def __init__(self, root: tk.Tk,controller:Controller.LogicController, init_athletes: Callable[[], []], go_back: Callable[[], []],
+                 go_forward: Callable[[], []]):
         super().__init__(root, bg="#4e73c2")
+        self.controller = controller
         self.forphoto = None
         self.backphoto = None
         self.photo = None
@@ -17,7 +22,7 @@ class ClubPage(tk.Frame):
         self.go_back = go_back
         self.init_athletes = init_athletes
         self.choose_view = None
-        self.root=root
+        self.root = root
         self.initialize()
 
     def initialize(self):
@@ -40,7 +45,8 @@ class ClubPage(tk.Frame):
 
         # Back Button
         self.backphoto = ImageTk.PhotoImage(Image.open("assets\\back.png").resize((75, 75)))
-        backButton = tk.Button(self.headerFrame, image=self.backphoto, command=self.go_back, bg="light grey", borderwidth=0)
+        backButton = tk.Button(self.headerFrame, image=self.backphoto, command=self.go_back, bg="light grey",
+                               borderwidth=0)
         backButton.place(relheight=0.225, relwidth=0.05, relx=0.9, rely=0.7)
 
         # Forward Button

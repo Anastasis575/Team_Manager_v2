@@ -2,12 +2,16 @@ import tkinter as tk
 from PIL import ImageTk, Image
 from collections.abc import Callable
 
+import Controller
+
 
 class MainWindowFrame(tk.Frame):
-    def __init__(self, root: tk.Tk, init_athlete: Callable[[], []], init_club: Callable[[], []],
+    def __init__(self, root: tk.Tk, controller: Controller.LogicController, init_athlete: Callable[[], []],
+                 init_club: Callable[[], []],
                  go_back: Callable[[], []], go_forward: Callable[[], []]) -> None:
         """
         Constructor for the main frame
+
         :param root: the Tk object that acts like the root of the frame
         :param init_athlete: a callback function for elevating the athlete page
         :param init_club: a callback function for elevating the club page
@@ -15,6 +19,7 @@ class MainWindowFrame(tk.Frame):
         :param go_forward: a callback function for moving to the next page
         """
         super().__init__(root, bg="#4e73c2")
+        self.controller = controller
         self.forphoto = None
         self.backphoto = None
         self.go_back = go_back
