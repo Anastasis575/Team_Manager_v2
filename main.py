@@ -5,7 +5,7 @@ from PIL import ImageTk, Image
 import logging as log
 
 from Controller import LogicController
-from DΑΟ import EsperosConnection
+from DAO import EsperosConnection
 from PageManager import PageManager
 from AthletePage import AthletePage
 from Club import ClubPage
