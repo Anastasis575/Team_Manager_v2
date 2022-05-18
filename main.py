@@ -13,6 +13,7 @@ from MainWindowFrame import MainWindowFrame
 import CopyPaste as c
 
 frame_page: dict = {}
+dao:EsperosConnection=None
 
 
 def show(title: str) -> None:
@@ -80,8 +81,8 @@ def main() -> None:
     log.info("we start here")
 
     manager = PageManager("main", show)
-    doa = EsperosConnection()
-    controller = LogicController(doa)
+    dao = EsperosConnection()
+    controller = LogicController(dao)
 
     root = tk.Tk()
     root.title("Team Manager")
@@ -117,11 +118,16 @@ def main() -> None:
     root.bind_class("Entry", "<Control-c>", copy)
     root.bind_class("Entry", "<Control-x>", cut)
     root.bind_class("Entry", "<Control-p>", paste)
-    root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root,doa))
+    root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root, dao))
     root.mainloop()
 
 
 if __name__ == '__main__':
     log.basicConfig(level=log.INFO, filename="esperos.log", filemode="w",
                     format='[%(asctime)s]:%(levelname)s-%(message)s')
-    main()
+    try:
+        main()
+    except KeyboardInterrupt as k:
+        dao.close()
+        print(k)
+
