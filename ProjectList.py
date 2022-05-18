@@ -89,7 +89,7 @@ class ProjectList(tk.Frame):
             self.projectVariable.set("Αναζήτηση")
         count = 0
         if searchResults != "Αναζήτηση":
-            data = self.controller.get_resoponsibility_information(searchResults)
+            data = self.controller.get_responsibility_information(searchResults)
             for entry in data:
                 self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]] = ImageTk.PhotoImage(
                     file="assets//state" + str(entry["Κατάσταση"]) + ".png")
@@ -100,7 +100,7 @@ class ProjectList(tk.Frame):
                         len(pd.date_range(start=entry["Πληρωμή"], end=pd.Timestamp.today(), freq="D")) - 1))
                 count += 1
         else:
-            data = self.controller.get_resoponsibility_information()
+            data = self.controller.get_responsibility_information()
             for entry in data:
                 self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]] = ImageTk.PhotoImage(
                     file="assets//state" + str(entry["Κατάσταση"]) + ".png")

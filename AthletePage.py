@@ -5,6 +5,7 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 
 import Controller
+from ItemList import ItemList
 from ProjectList import ProjectList
 
 
@@ -87,18 +88,19 @@ class AthletePage(tk.Frame):
         self.forms.place(relwidth=0.25, relheight=0.1, relx=0.58, rely=0.75)
 
         # List of data options
-        # self.typeOptions = ["Στοιχεία"]
-        # for i in self.data.dropna(axis=1).columns:
-        #     if str(i) != "Τελευταία επεξεργασία" and str(i) != "Τελευταία Πληρωμή" and str(
-        #             i) != "Ημερομηνία Δημιουργίας" and str(i) != "Κατάσταση":
-        #         self.typeOptions.append(str(i))
-        # self.typeVar = tk.StringVar(self.subHeaderFrame)
-        # self.typeVar.set(self.typeOptions[0])
-        # self.type = tk.OptionMenu(self.subHeaderFrame, self.typeVar, *self.typeOptions, command=self.update)
-        # self.type.config(font=("Arial", 24), bg="#494949", fg="#fff")
-        # self.type['menu'].config(font=("Arial", 18), bg="#494949")
-        # self.type.place(relwidth=0.25, relheight=0.15, relx=0.025, rely=0.27)
-        # self.type["state"] = tk.DISABLED
+        self.typeOptions = ["Στοιχεία"]
+        attributes = self.controller.get_person_attributes(
+            self.formVar.get() if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους" else None)
+        for column in attributes:
+            if str(column) != "Last_payment" and str(column) != "Date_created" and str(column) != "State":
+                self.typeOptions.append(str(column))
+        self.typeVar = tk.StringVar(self.subHeaderFrame)
+        self.typeVar.set(self.typeOptions[0])
+        self.type = tk.OptionMenu(self.subHeaderFrame, self.typeVar, *self.typeOptions, command=self.update)
+        self.type.config(font=("Arial", 24), bg="#494949", fg="#fff")
+        self.type['menu'].config(font=("Arial", 18), bg="#494949")
+        self.type.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.27)
+        self.type["state"] = tk.DISABLED
 
         # Club page creation button
         self.teamButton = tk.Button(self.subHeaderFrame, text="Δεδομένα\nΣυλόγου",
@@ -123,13 +125,12 @@ class AthletePage(tk.Frame):
         self.mainCanvas.configure(yscrollcommand=self.scroll.set)
         self.mainCanvas.bind("<Configure>",
                              lambda e: self.mainCanvas.configure(scrollregion=self.mainCanvas.bbox("all")))
-        # self.listFrame = ItemList(self, self.data, "#1b2135")
+        self.listFrame = ItemList(self.controller, self, "#1b2135")
 
         self.listFrame = tk.Frame(self.mainCanvas, bg="#1b2135")
         self.mainCanvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1400,
                                       height=1330)  # Be Careful
 
-        #TODO: add the data projections
         self.projection = ProjectList(self.controller, self.otherframe)
         self.projection.pack(expand=True, fill=tk.BOTH)
         self.ProjectButton = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
@@ -140,8 +141,35 @@ class AthletePage(tk.Frame):
         self.basicFrame.tkraise()
 
     def project_data(self):
+        """
+        Callback for raising the Data projection frame.
+
+        :return: None.
+        """
         self.otherframe.tkraise()
 
-    def update_form(self):
-        # TODO: when you implement the item list
-        pass
+    def update_form(self, value):
+        """
+        An updater callback for the attribute selection Option menu.
+
+        :param value: an empty event parameter for the outcome of tk.OptionMenu.
+        :return: None.
+        """
+        if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους":
+            self.type["state"] = tk.NORMAL
+            tempdata = self.controller.get_person_attributes(self.formVar.get())
+            self.typeVar.set("")
+            self.type["menu"].delete(0, 'end')
+            self.type["menu"].add_command(label="Στοιχεία", command=lambda value="Στοιχεία": self.updateEntry(value))
+            for column in tempdata:
+                if str(column) != "Last_payment" and str(column) != "Date_created" and str(column) != "State":
+                    self.type["menu"].add_command(label=column, command=lambda value=column: self.updateEntry(value))
+            self.typeVar.set("Στοιχεία")
+            if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους":
+                self.listFrame.update_list(self.formVar.get(),
+                                           self.typeVar.get() if self.typeVar.get() != "Στοιχεία" else None)
+        else:
+            for i in self.listFrame.winfo_children():
+                i.destroy()
+                self.listFrame.items = []
+            self.type["state"] = tk.DISABLED
