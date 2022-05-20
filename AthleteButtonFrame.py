@@ -2,6 +2,9 @@ import tkinter as tk
 from collections.abc import Callable
 from enum import IntEnum
 
+import pandas as pd
+from pandas import Timestamp
+
 from Controller import LogicController
 import tkinter.messagebox as mb
 
@@ -12,38 +15,47 @@ class Mode(IntEnum):
 
 
 class ButtonFrame(tk.Frame):
-    def __init__(self, root: tk.Frame, controller: LogicController, cancel_activation_function: Callable[[], []],
-                 occ: str):
+    def __init__(self, root: tk.Frame, controller: LogicController, return_callback: Callable[[], []],
+                 cancel_activation_function: Callable[[], []],occ: str):
         """
         Constructor for a blank person information page, with the needed entries for the occupation.
 
         :param root: The base frame to initialize this frame on.
         :param controller: the logic controller of the application
+        :param return_callback: Callback to revert after completion
         :param cancel_activation_function: The function to run whenever this frame is brought to the surface in order to be able to return to the default activity.
         :param occ: The name  of the occupation that this page will be formatted for.
         """
-        super().__init__(root)
+        super().__init__(root, bg="#E8E6E8")
+        self.return_callback = return_callback
+        self._mode = None
         self.revert_function = cancel_activation_function
         self.controller = controller
         self.occ = occ
+
         self.initialize()
 
     @property
     def mode(self):
-        return self.mode
+        return self._mode
 
     @mode.setter
     def mode(self, value: Mode):
-        self.mode = value
+        self._mode = value
 
-    def initialize(self):
+    def initialize(self) -> None:
+        """
+        Initializes UI.
+
+        :return: None.
+        """
         self.frames = {}
         self.entries = {}
         namevar = tk.StringVar()
-        namevar.set("55")
-        self.nameFrame = tk.Frame(self, bg="#1b2135")
-        self.nameFrame.place(relheight=0.1, relwidth=0.4, relx=0.05, rely=0.025)
-        self.nameLabel = tk.Label(self.nameFrame, text="Επώνυμο", bg="#1b2135", fg="#fff")
+        namevar.set("")
+        self.nameFrame = tk.Frame(self, bg="#b3b3b3")
+        self.nameFrame.place(relheight=0.1, relwidth=0.26, relx=0.05, rely=0.025)
+        self.nameLabel = tk.Label(self.nameFrame, text="Επώνυμο", bg="#b3b3b3", fg="#fff")
         self.nameLabel.config(font=("Arial", 18))
         self.nameLabel.place(relheight=0.5, relwidth=1, relx=0, rely=0)
         self.nameEntry = tk.Entry(self.nameFrame, textvariable=namevar, bg="#fff")
@@ -55,9 +67,9 @@ class ButtonFrame(tk.Frame):
 
         surNamevar = tk.StringVar()
         surNamevar.set("")
-        surNameFrame = tk.Frame(self, bg="#1b2135")
-        surNameFrame.place(relheight=0.1, relwidth=0.4, relx=0.55, rely=0.025)
-        self.surNameLabel = tk.Label(surNameFrame, text="Όνομα", bg="#1b2135", fg="#fff")
+        surNameFrame = tk.Frame(self, bg="#b3b3b3")
+        surNameFrame.place(relheight=0.1, relwidth=0.26, relx=0.37, rely=0.025)
+        self.surNameLabel = tk.Label(surNameFrame, text="Όνομα", bg="#b3b3b3", fg="#fff")
         self.surNameLabel.config(font=("Arial", 18))
         self.surNameLabel.place(relheight=0.5, relwidth=1, relx=0, rely=0)
         self.surNameEntry = tk.Entry(surNameFrame, textvariable=surNamevar, bg="#fff")
@@ -70,8 +82,8 @@ class ButtonFrame(tk.Frame):
         catvar = tk.StringVar()
         catvar.set("")
         self.catFrame = tk.Frame(self, bg="#1b2135")
-        self.catFrame.place(relheight=0.1, relwidth=0.4, relx=0.3, rely=0.15)
-        self.catLabel = tk.Label(self.catFrame, text="Κατηγορία", bg="#1b2135", fg="#fff")
+        self.catFrame.place(relheight=0.1, relwidth=0.26, relx=0.68, rely=0.025)
+        self.catLabel = tk.Label(self.catFrame, text="Κατηγορία", bg="#b3b3b3", fg="#fff")
         self.catLabel.config(font=("Arial", 18))
         self.catLabel.place(relheight=0.5, relwidth=1, relx=0, rely=0)
         self.catEntry = tk.Entry(self.catFrame, textvariable=catvar, bg="#fff")
@@ -81,25 +93,25 @@ class ButtonFrame(tk.Frame):
         self.frames["Κατηγορία"] = self.catEntry
         self.entries["Κατηγορία"] = catvar
 
-        self.rest = tk.Frame(self, bg="#1b2135")
-        self.rest.place(relheight=0.5, relwidth=0.9, relx=0.05, rely=0.275)
+        self.rest = tk.Frame(self, bg="#e2e2e2")
+        self.rest.place(relheight=0.7, relwidth=0.9, relx=0.05, rely=0.15)
         counter = 0
         self.frames = {}
         categories = self.controller.get_person_attributes_by_occupation(self.occ)
 
         for cat in categories:
-            if cat != "Cat" and cat != "Latest_payment" and cat != "Date_created" and cat != "State":
+            if cat != "Κατηγορία" and cat != "Τελευταία_πληρωμή" and cat != "Ημερομηνία_Δημιουργίας" and cat != "Κατάσταση" and cat != "Επώνυμο" and cat != "Όνομα":
                 tempFrame = tk.LabelFrame(self.rest, bg="#1b2135")
-                tempFrame.place(relheight=0.1, relwidth=1, relx=0, rely=0 + 0.075 * counter)
+                tempFrame.place(relheight=0.1, relwidth=1, relx=0, rely=0.08 * counter)
                 tempVar = tk.StringVar()
                 tempVar.set("")
-                tempLabel = tk.Label(tempFrame, text="{:20s}".format(cat), bg="#1b2135", fg="#fff", justify=tk.LEFT,
+                tempLabel = tk.Label(tempFrame, text="{:20s}".format(cat), bg="#b3b3b3", fg="#fff", justify=tk.LEFT,
                                      anchor='w')
                 tempLabel.config(font=("Arial", 14))
-                tempLabel.place(relwidth=0.5, relheight=1)
+                tempLabel.place(relwidth=0.35, relheight=1)
                 tempEntry = tk.Entry(tempFrame, textvariable=tempVar, bg="#fff")
                 tempEntry.config(font=("Arial", 14))
-                tempEntry.place(relwidth=0.5, relheight=1, relx=0.5)
+                tempEntry.place(relwidth=0.65, relheight=1, relx=0.35)
                 tempEntry["state"] = tk.DISABLED
                 self.frames[cat] = tempEntry
                 self.entries[cat] = tempVar
@@ -116,13 +128,27 @@ class ButtonFrame(tk.Frame):
         self.doneButton.place(relheight=0.05, relwidth=0.35, relx=0.55, rely=0.9)
         self.doneButton["state"] = tk.DISABLED
 
-    def set_data(self, data: dict):
-        self.revert_function()
-        self.mode = self.mode.UPDATE
-        for i in data:
-            self.entries[i].set(data[i])
+    def set_data(self, data: dict) -> None:
+        """
+        Callback to adding the person data for inspection.
 
-    def enable(self):
+        :param data: The person data in a tuple.
+        :return: None.
+        """
+        self.disable()
+        self.revert_function()
+        self.mode = Mode.UPDATE
+        info = self.controller.get_person_info(data["Επώνυμο"], data["Όνομα"], data["Κατηγορία"])
+        for i in info:
+            if i != "Τελευταία_πληρωμή" and i != "Ημερομηνία_Δημιουργίας" and i != "Κατάσταση":
+                self.entries[i].set(info[i])
+
+    def enable(self) -> None:
+        """
+        Enabling callback for when we want to edit the person entry.
+
+        :return: None.
+        """
         self.doneButton["state"] = tk.NORMAL
         self.nameEntry["state"] = tk.NORMAL
         self.surNameEntry["state"] = tk.NORMAL
@@ -130,54 +156,52 @@ class ButtonFrame(tk.Frame):
         for i in self.frames:
             self.frames[i]["state"] = tk.NORMAL
 
-    def complete(self):
+    def complete(self) -> None:
+        """
+        Callback to initiate the update and insert functions.
+
+        :return: None
+        """
         # index = self.controller.get_person_attributes_by_occupation(self.occ)
         data = {}
         for i in self.entries:
-            data[i] = self.entries[i].get()
-        print(data)
+            if i == "Ενεργά_χρόνια" or i == "Δωρεάν_μπλούζες" or i == "Χρεωμένες_μπλούζες":
+                data[i] = int(self.entries[i].get() if self.entries[i].get() != "" else "0")
+                continue
+            elif i == "Ύψος" or i == "Ποσό_για_μπλούζες" or i == "Υποχρεώσεις":
+                data[i] = float(self.entries[i].get() if self.entries[i].get() != "" else "0")
+                continue
+            data[i] = self.entries[i].get() if self.entries[i].get() != "" else "-"
         if data["Όνομα"] != "" and data["Επώνυμο"] != "" and data["Κατηγορία"] != "":
             if self.mode == Mode.CREATE:
                 print("Create")
+                if self.controller.get_occupation_by_category(data["Κατηγορία"]) == "Αθλητής/τρια":
+                    data["Ημερομηνία_Δημιουργίας"] = Timestamp.now()
+                    data["Τελευταία_πληρωμή"] = Timestamp.now()
+                    data["Κατάσταση"] = 1
+                self.controller.create_person_entry(data["Όνομα"], data["Επώνυμο"], data)
             else:
                 print("Update")
-            # self.data = self.data.reset_index()
-            # self.data.loc[ind, "Όνομα"] = data["Όνομα"] if data["Όνομα"] != "" else "-"
-            # self.data.loc[ind, "Επώνυμο"] = data["Επώνυμο"] if data["Επώνυμο"] != "" else "-"
-            # index = (self.data.loc[ind, "Επώνυμο"], self.data.loc[ind, "Όνομα"])
-            # self.data = self.data.set_index(["Επώνυμο", "Όνομα"])
-            # for i in data:
-            #     if i != "Όνομα" and i != "Επώνυμο":
-            #         if i == "Μπλούζες Δωρεάν" or i == "Μπλούζες Χρεωμένες" or i == "Σύνολο για Μπλούζες" or i == "Εκρεμμότητες":
-            #             self.data.loc[index, i] = int(data[i]) if data[i] != "" else 0
-            #         elif i == "Ημερομηνία Δημιουργίας":
-            #             self.data.loc[index, i] = pd.to_datetime(data[i]) if data[i] != "" else self.data.loc[index, i]
-            #         elif i == "Όνομα" or i == "Επώνυμο":
-            #             ind = self.data.index.get_loc(index[0])
-            #             self.data = self.data.reset_index()
-            #             self.data.loc[ind, i] = data[i] if data[i] != "" else "-"
-            #             self.data = self.data.set_index(["Επώνυμο", "Όνομα"])
-            #         else:
-            #             self.data.loc[index, i] = data[i] if data[i] != "" else "-"
-            #     if float(self.DueChange) != float(data["Εκρεμμότητες"]):
-            #         self.data.loc[index, "Τελευταία Πληρωμή"] = pd.Timestamp.today()
-            #         if int(data["Εκρεμμότητες"]) <= 0:
-            #             self.data.loc[index, "Κατάσταση"] = 1
-            #         else:
-            #             self.data.loc[index, "Κατάσταση"] = 2
+                if self.controller.get_occupation_by_category(data["Κατηγορία"]) == "Αθλητής/τρια":
+                    if self.controller.get_person_responsibility(data["Επώνυμο"], data["Όνομα"],
+                                                                 data["Υποχρεώσεις"]) > 0:
+                        data["Κατάσταση"] = 2 if data["Υποχρεώσεις"] > 0 else 1
+                        data["Τελευταία_πληρωμή"] = Timestamp.now()
+                self.controller.update_person_info(data["Όνομα"], data["Επώνυμο"], data)
 
-            # TODO: call the controller callback to save the data
         else:
             mb.showinfo("Σφάλμα", "Τα πεδία Όνομα, Επώνυμο και Κατηγορία πρέπει να έχουν τιμή")
-        self.disable()
+        self.return_callback()
 
-    def disable(self):
-        if mb.askyesno("Έξοδος", "Θα θέλατε να αποχωρήσετε;"):
-            self.endAction()
-        else:
-            self.nameEntry["state"] = tk.DISABLED
-            self.surNameEntry["state"] = tk.DISABLED
-            self.catEntry["state"] = tk.DISABLED
-            for i in self.frames:
-                self.frames[i]["state"] = tk.DISABLED
-            self.doneButton["state"] = tk.DISABLED
+    def disable(self) -> None:
+        """
+        Disable all entries when just viewing the target entry.
+
+        :return:
+        """
+        self.nameEntry["state"] = tk.DISABLED
+        self.surNameEntry["state"] = tk.DISABLED
+        self.catEntry["state"] = tk.DISABLED
+        for i in self.frames:
+            self.frames[i]["state"] = tk.DISABLED
+        self.doneButton["state"] = tk.DISABLED

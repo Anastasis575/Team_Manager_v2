@@ -63,7 +63,7 @@ class LogicController:
         names = ["Επώνυμο", "Όνομα", "Κατηγορία"]
         if parameter is not None:
             names.append(parameter)
-        return list(map(lambda x: data(zip(names, x)), data))
+        return list(map(lambda x: dict(zip(names, x)), data))
 
     def get_person_attributes_by_occupation(self, occ: str) -> list:
         """
@@ -72,6 +72,56 @@ class LogicController:
         :param occ: The name of the occupation.
         :return: the list of attributes that define a person with the requested occupation.
         """
+
         if occ == "Αθλητής/τρια":
             return list(map(lambda x: x[0], self.dao.get_attributes(1)))
-        return list(map(lambda x: x[0], self.dao.get_attributes(2)))
+        else:
+            return list(map(lambda x: x[0], self.dao.get_attributes(2)))
+
+    def get_occupation_by_category(self, category: str) -> str:
+        """
+        A wrapper to return the occupation a certain category belongs to.
+
+        :param category: The name of the category we seek to find the occupation of.
+        :return: The name of the occupation
+        """
+        return self.dao.get_occupation(category)
+
+    def get_person_info(self, surname, name, category) -> dict:
+        """
+        A wrapper for retrieving a persons information by their surname, name and category.
+
+        :param surname: The surname of the person
+        :param name: The name of the person
+        :param category: The category the person is in
+        :return: the dictionary of their information
+        """
+        occ = self.dao.get_occupation(category)
+        fetched = self.dao.get_person_info(surname, name, occ)
+        return fetched
+
+    def create_person_entry(self, surname: str, name: str, data: dict) -> None:
+        """
+        Callback to call the dao object and insert the ney person entry.
+
+        :param surname: The surname of the person.
+        :param name: The name of the person
+        :param data: The dictionary with the person's data
+        :return: None.
+        """
+        self.dao.create_person_entry(surname, name, data)
+
+    def update_person_info(self, surname: str, name: str, data: dict) -> None:
+        self.dao.update_person_entry(surname, name, data)
+
+    def get_person_responsibility(self, name: str, surname: str, new_responsibilities: str) -> int:
+        """
+        Checks if this person's responsibility has changed.
+        :param surname: The surname of the person to check.
+        :param name: The name of the person to check.
+        :param new_responsibilities: the new value for the person's responsibility
+        :return: 1 if the new responsibility is lower than the old one, 2 if the new is greater and 0 otherwise
+        """
+        value = self.dao.get_person_responsibility(name, surname)
+        new_value = float(new_responsibilities)
+        return 0 if value == new_value else (1 if new_value<value else 2)

@@ -19,10 +19,10 @@ class ProjectList(tk.Frame):
         self.master = master
         # self.data = data
         self.imag = {}
-        self.top = super().__init__(master, bg="#1b2135")
-        miniframe = tk.Frame(self, bg="#1b2135")
+        self.top = super().__init__(master, bg="#b3b3b3")
+        miniframe = tk.Frame(self, bg="#b3b3b3")
         miniframe.pack(padx=25, pady=15, anchor=tk.E, fill=tk.X)
-        label = tk.Label(miniframe, text="Λίστα Οφειλών Μελών", font=("Arial", 24), fg="#fff", bg="#1b2135")
+        label = tk.Label(miniframe, text="Λίστα Οφειλών Μελών", font=("Arial", 24), fg="#fff", bg="grey")
         label.pack(padx=25, pady=15, side=tk.LEFT, anchor=tk.W)
         self.projectVariable = tk.StringVar()
         self.projectVariable.set("Αναζήτηση")
@@ -80,7 +80,13 @@ class ProjectList(tk.Frame):
     # def email(self):
     #    print(self.treeview.selection())
 
-    def refresh_treeview(self,value):
+    def refresh_treeview(self, value) -> None:
+        """
+        Refreshes the Responsibilities UI for new search results.
+
+        :param value: not used.
+        :return: None.
+        """
         if len(self.treeview.get_children()) != 0:
             for item in self.treeview.get_children():
                 self.treeview.delete(item)
@@ -106,7 +112,7 @@ class ProjectList(tk.Frame):
                     file="assets//state" + str(entry["Κατάσταση"]) + ".png")
                 self.treeview.insert(parent='', text="", image=self.imag[entry["Όνομα"] + " " + entry["Επώνυμο"]],
                                      index=tk.END, iid=str(count), values=(
-                    entry["Επώνυμο"], entry["Όνομα"], entry["Κατηγορία"], entry["Σταθερό"], entry["Κινητό"],
-                    entry["Email"], entry["Εκκρεμότητες"],
-                    len(pd.date_range(start=entry["Πληρωμή"], end=pd.Timestamp.today(), freq="D")) - 1))
+                        entry["Επώνυμο"], entry["Όνομα"], entry["Κατηγορία"], entry["Σταθερό"], entry["Κινητό"],
+                        entry["Email"], entry["Εκκρεμότητες"],
+                        len(pd.date_range(start=entry["Πληρωμή"], end=pd.Timestamp.today(), freq="D")) - 1))
                 count += 1

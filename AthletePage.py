@@ -5,7 +5,7 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 
 import Controller
-from ItemList import ItemList
+from ItemList import ItemList, ButtonFrame
 from ProjectList import ProjectList
 
 
@@ -20,9 +20,10 @@ class AthletePage(tk.Frame):
         :param go_forward: a callback function for going to the next page
         """
         super().__init__(root, bg="#4e73c2")
+        self.listFrame: ItemList = None
         self.controller = controller
         self.basicFrame = None
-        self.otherframe = None
+        self.project_frame = None
         self.deleteEntry = None
         self.go_back = go_back
         self.go_forward = go_forward
@@ -34,6 +35,11 @@ class AthletePage(tk.Frame):
         self.initialize()
 
     def initialize(self):
+        """
+        Initializer for the UI.
+
+        :return: None.
+        """
         # Two basic operational frames
         self.headerFrame = tk.Frame(self, bg="light grey")
         self.headerFrame.place(relwidth=0.8, relheight=0.35, relx=0.1, rely=0)
@@ -64,16 +70,16 @@ class AthletePage(tk.Frame):
         self.forwardButton.place(relheight=0.225, relwidth=0.05, relx=0.95, rely=0.7)
 
         # Create button, to create a new entry
-        self.createButton = tk.Button(self.headerFrame, bg="#c1c1c1", text="Δημιουργία Καινούργιας Εγγραφής",
+        self.createButton = tk.Button(self.subHeaderFrame, bg="#494949", text="Δημιουργία Καινούργιας \nΕγγραφής",
                                       command=self.controller.create_entry, borderwidth=0)
-        self.createButton.config(font=("Arial", 16))
-        self.createButton.place(relheight=0.15, relwidth=0.25, relx=0.3, rely=0.5)
+        self.createButton.config(font=("Arial", 16), fg="#fff")
+        self.createButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.27)
 
         # Delete button, to delete an existing entry
-        self.deleteButton = tk.Button(self.headerFrame, bg="#c1c1c1", text="Διαγραφή Υπάρχουσας Εγγραφής",
+        self.deleteButton = tk.Button(self.subHeaderFrame, bg="#494949", text="Διαγραφή Υπάρχουσας \nΕγγραφής",
                                       command=self.deleteEntry, borderwidth=0)
-        self.deleteButton.config(font=("Arial", 16))
-        self.deleteButton.place(relheight=0.15, relwidth=0.25, relx=0.3, rely=0.7)
+        self.deleteButton.config(font=("Arial", 16), fg="#fff")
+        self.deleteButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.45)
 
         # Choice box about the category of the data
         options = ["Επιλέξτε μια κατηγορία μέλους"]
@@ -87,19 +93,20 @@ class AthletePage(tk.Frame):
         self.forms['menu'].config(font=("Arial", 18), bg="#c1c1c1")
         self.forms.place(relwidth=0.25, relheight=0.1, relx=0.58, rely=0.75)
 
-        # List of data options
+        # List of data options for which attribute to look for
         self.typeOptions = ["Στοιχεία"]
         attributes = self.controller.get_person_attributes(
             self.formVar.get() if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους" else None)
         for column in attributes:
-            if str(column) != "Last_payment" and str(column) != "Date_created" and str(column) != "State":
+            if str(column) != "Όνομα" or str(column) != "Επώνυμο" or str(column) != "Τελευταία_πληρωμή" or \
+                    str(column) != "Ημερομηνία_Δημιουργίας" or str(column) != "Κατάσταση":
                 self.typeOptions.append(str(column))
         self.typeVar = tk.StringVar(self.subHeaderFrame)
         self.typeVar.set(self.typeOptions[0])
-        self.type = tk.OptionMenu(self.subHeaderFrame, self.typeVar, *self.typeOptions, command=self.update)
-        self.type.config(font=("Arial", 24), bg="#494949", fg="#fff")
-        self.type['menu'].config(font=("Arial", 18), bg="#494949")
-        self.type.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.27)
+        self.type = tk.OptionMenu(self.headerFrame, self.typeVar, *self.typeOptions, command=self.update_values())
+        self.type.config(font=("Arial", 18), bg="#c1c1c1")
+        self.type['menu'].config(font=("Arial", 18), bg="#c1c1c1")
+        self.type.place(relheight=0.1, relwidth=0.25, relx=0.3, rely=0.75)
         self.type["state"] = tk.DISABLED
 
         # Club page creation button
@@ -109,36 +116,67 @@ class AthletePage(tk.Frame):
         self.teamButton.config(font=("Arial", 36))
         self.teamButton.place(relwidth=0.2, relheight=0.2, relx=0.025, rely=0.05)
 
-        above_frame = tk.Frame(self.subHeaderFrame, bg="#1b2135")
+        above_frame = tk.Frame(self.subHeaderFrame, bg="#b3b3b3")
         above_frame.place(relheight=1, relwidth=0.75, relx=0.25, rely=0)
         above_frame.rowconfigure(0, weight=1)
         above_frame.columnconfigure(0, weight=1)
         # Main data frame for objects
-        self.otherframe = tk.Frame(above_frame, bg="red")
-        self.otherframe.grid(row=0, column=0, sticky="nsew")
+        self.project_frame = tk.Frame(above_frame, bg="red")
+        self.project_frame.grid(row=0, column=0, sticky="nsew")
         self.basicFrame = tk.Frame(above_frame, bg="#1b2135")
         self.basicFrame.grid(row=0, column=0, sticky="nsew")
-        self.mainCanvas = tk.Canvas(self.basicFrame)
-        self.mainCanvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        self.scroll = ttk.Scrollbar(self.basicFrame, command=self.mainCanvas.yview)
+        self.main_athlete_canvas = tk.Canvas(self.basicFrame)
+        self.main_athlete_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.scroll = ttk.Scrollbar(self.basicFrame, command=self.main_athlete_canvas.yview)
         self.scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.mainCanvas.configure(yscrollcommand=self.scroll.set)
-        self.mainCanvas.bind("<Configure>",
-                             lambda e: self.mainCanvas.configure(scrollregion=self.mainCanvas.bbox("all")))
-        self.listFrame = ItemList(self.controller, self, "#1b2135")
+        self.main_athlete_canvas.configure(yscrollcommand=self.scroll.set)
+        self.main_athlete_canvas.bind("<Configure>",
+                                      lambda e: self.main_athlete_canvas.configure(
+                                          scrollregion=self.main_athlete_canvas.bbox("all")))
 
-        self.listFrame = tk.Frame(self.mainCanvas, bg="#1b2135")
-        self.mainCanvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1400,
-                                      height=1330)  # Be Careful
+        self.athlete_data_frame = ButtonFrame(above_frame, self.controller, self.revert, self.disable_options,
+                                              "Αθλητής/τρια")
+        self.athlete_data_frame.grid(row=0, column=0, sticky="nsew")
 
-        self.projection = ProjectList(self.controller, self.otherframe)
+        self.POI_data_frame = ButtonFrame(above_frame, self.controller, self.revert, self.disable_options,
+                                          "Ενδιαφερόμενος/η", )
+        self.POI_data_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.listFrame = ItemList(self.athlete_data_frame, self.POI_data_frame, self.controller, self, "#e2e2e2")
+
+        # self.listFrame = tk.Frame(self.mainCanvas, bg="#1b2135")
+        self.main_athlete_canvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1200,
+                                               height=1330)  # Be Careful
+
+        self.projection = ProjectList(self.controller, self.project_frame)
         self.projection.pack(expand=True, fill=tk.BOTH)
-        self.ProjectButton = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
-                                       text="Εμφάνιση Λίστας Εκκρεμοτήττων", command=self.project_data, borderwidth=0)
+        self.project_button = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
+                                        text="Εμφάνιση Λίστας \nΕκκρεμοτήτων", command=self.project_data, borderwidth=0)
 
-        self.ProjectButton.config(font=("Arial", 16))
-        self.ProjectButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.45)
-        self.basicFrame.tkraise()
+        self.project_button.config(font=("Arial", 16))
+        self.project_button.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.62)
+
+        self.cancel_button = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
+                                       text="Ακύρωση", command=self.revert, borderwidth=0)
+        self.cancel_button.config(font=("Arial", 16))
+        self.cancel_button.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.8)
+        self.cancel_button["state"] = tk.DISABLED
+        self.revert()
+
+    def disable_options(self) -> None:
+        """
+        Callback to disable all other options.
+
+        :return: None.
+        """
+        self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
+        self.typeVar.set("Στοιχεία")
+        self.type["state"] = tk.DISABLED
+        self.forms["state"] = tk.DISABLED
+        self.cancel_button["state"] = tk.NORMAL
+        self.createButton["state"] = tk.DISABLED
+        self.deleteButton["state"] = tk.DISABLED
+        self.project_button["state"] = tk.DISABLED
 
     def project_data(self):
         """
@@ -146,7 +184,8 @@ class AthletePage(tk.Frame):
 
         :return: None.
         """
-        self.otherframe.tkraise()
+        self.disable_options()
+        self.project_frame.tkraise()
 
     def update_form(self, value):
         """
@@ -160,10 +199,11 @@ class AthletePage(tk.Frame):
             tempdata = self.controller.get_person_attributes(self.formVar.get())
             self.typeVar.set("")
             self.type["menu"].delete(0, 'end')
-            self.type["menu"].add_command(label="Στοιχεία", command=lambda value="Στοιχεία": self.updateEntry(value))
+            self.type["menu"].add_command(label="Στοιχεία", command=lambda value="Στοιχεία": self.update_entry(value))
             for column in tempdata:
-                if str(column) != "Last_payment" and str(column) != "Date_created" and str(column) != "State":
-                    self.type["menu"].add_command(label=column, command=lambda value=column: self.updateEntry(value))
+                if str(column) != "Όνομα" or str(column) != "Επώνυμο" or str(column) != "Τελευταία_πληρωμή" or \
+                        str(column) != "Ημερομηνία_Δημιουργίας" or str(column) != "Κατάσταση":
+                    self.type["menu"].add_command(label=column, command=lambda value=column: self.update_entry(value))
             self.typeVar.set("Στοιχεία")
             if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους":
                 self.listFrame.update_list(self.formVar.get(),
@@ -173,3 +213,66 @@ class AthletePage(tk.Frame):
                 i.destroy()
                 self.listFrame.items = []
             self.type["state"] = tk.DISABLED
+
+    def revert(self):
+        """
+        A callback to revert to the default screen.
+
+        :return: None
+        """
+        self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
+        self.typeVar.set("Στοιχεία")
+        self.type["state"] = tk.NORMAL
+        self.forms["state"] = tk.NORMAL
+        self.cancel_button["state"] = tk.DISABLED
+        self.createButton["state"] = tk.NORMAL
+        self.deleteButton["state"] = tk.NORMAL
+        self.project_button["state"] = tk.NORMAL
+        self.basicFrame.tkraise()
+
+    def update_values(self) -> None:
+        """
+        A callback for when we change which attribute we want to be displayed alongside the person's fulll name.
+
+        :return: None.
+        """
+        if self.listFrame is not None:
+            self.listFrame.update_list(self.formVar.get(),
+                                       self.typeVar.get() if self.typeVar.get() != "Στοιχεία" else None)
+
+    def update_entry(self, value):
+        """
+        Callback to create new options for the attribute selector type.
+
+        :param value: value to be used.
+        :return: None.
+        """
+        self.typeVar.set(value)
+        self.update_values()
+
+    def create_person(self):
+        """
+
+        :return:
+        """
+        self.top=tk.Toplevel(self.root,bg="#1b2135")
+        self.top.geometry("500x200")
+        self.top.resizable(True,True)
+        self.w_c["Create"]=self.top
+        self.top.title("Είδος Νέου Μέλους")
+        frame=tk.Frame(self.top,bg="#1b2135")
+        frame.pack(fill=tk.BOTH,expand=True)
+        label=tk.Label(frame,text="Επιλεξτε το είδος του νέου μέλους")
+        label.config(font=("Arial",18))
+        label.pack(anchor=tk.CENTER)
+        options=["Αθλητής/τρια","Προπονητικό Team","Χορηγός","Θεατής","Παλαιός Αθλητής","Παθητικό Μέλος","Γονέας"]
+        self.tempvar=tk.StringVar(frame)
+        self.tempvar.set("Ιδιότητα")
+        self.choicebox=tk.OptionMenu(frame,self.tempvar,"Ιδιότητα",*options,command=self.create())
+        self.choicebox.config(font=("Arial",18))
+        self.choicebox["menu"].config(font=("Arial",18))
+        self.choicebox.pack(anchor=tk.CENTER)
+        self.listFrame.disableAll()
+        self.top.mainloop()
+    def create(self):
+        if self.tempvar.get()!="":

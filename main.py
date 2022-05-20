@@ -10,10 +10,9 @@ from PageManager import PageManager
 from AthletePage import AthletePage
 from Club import ClubPage
 from MainWindowFrame import MainWindowFrame
-import CopyPaste as c
+import CopyPaste as Cp
 
 frame_page: dict = {}
-dao:EsperosConnection=None
 
 
 def show(title: str) -> None:
@@ -23,7 +22,7 @@ def show(title: str) -> None:
     :param title: the title of the frame we want to show
     :return: None
     """
-    if not title in frame_page.keys():
+    if title not in frame_page.keys():
         log.fatal("There is no frame with the name %s", title)
         raise Exception("There is no frame with this title")
 
@@ -60,7 +59,7 @@ def cut(event):
     event.widget.event_generate("<<Cut>>")
 
 
-def exit_w(root:tk.Tk,dao:EsperosConnection)->None:
+def exit_w(root: tk.Tk, dao: EsperosConnection) -> None:
     """
     On exit callback
 
@@ -68,7 +67,6 @@ def exit_w(root:tk.Tk,dao:EsperosConnection)->None:
     :param dao: the Data Application Object handler/Model
     :return: None
     """
-    dao.close()
     root.destroy()
 
 
@@ -78,56 +76,53 @@ def main() -> None:
 
     :return: None
     """
+
     log.info("we start here")
 
     manager = PageManager("main", show)
-    dao = EsperosConnection()
-    controller = LogicController(dao)
+    with EsperosConnection() as dao:
+        controller = LogicController(dao)
 
-    root = tk.Tk()
-    root.title("Team Manager")
-    root.geometry("1600x900")
-    root.state("zoomed")
-    root.iconphoto(True, ImageTk.PhotoImage(Image.open("assets\\Esperos.png")))
-    root.rowconfigure(0, weight=1)
-    root.columnconfigure(0, weight=1)
+        root = tk.Tk()
+        root.title("Team Manager")
+        root.geometry("1600x900")
+        root.state("zoomed")
+        root.iconphoto(True, ImageTk.PhotoImage(Image.open("assets\\Esperos.png")))
+        root.rowconfigure(0, weight=1)
+        root.columnconfigure(0, weight=1)
 
-    frame_page["main"] = MainWindowFrame(root,controller, lambda: update_manager(manager, "main", "athletes", show),
-                                         lambda: update_manager(manager, "main", "club", show),
-                                         manager.move_back,
-                                         manager.move_forward)
+        frame_page["main"] = MainWindowFrame(root, controller, lambda: update_manager(manager, "main", "athletes", show),
+                                             lambda: update_manager(manager, "main", "club", show),
+                                             manager.move_back,
+                                             manager.move_forward)
 
-    frame_page["main"].grid(row=0, column=0, sticky="nsew")
-    frame_page["athletes"] = AthletePage(root, controller,lambda: update_manager(manager, "athletes", "club", show),
-                                         manager.move_back,
-                                         manager.move_forward)
+        frame_page["main"].grid(row=0, column=0, sticky="nsew")
+        frame_page["athletes"] = AthletePage(root, controller, lambda: update_manager(manager, "athletes", "club", show),
+                                             manager.move_back,
+                                             manager.move_forward)
 
-    frame_page["athletes"].grid(row=0, column=0, sticky="nsew")
+        frame_page["athletes"].grid(row=0, column=0, sticky="nsew")
 
-    frame_page["club"] = ClubPage(root, controller,lambda: update_manager(manager, "club", "athletes", show),
-                                  manager.move_back,
-                                  manager.move_forward)
+        frame_page["club"] = ClubPage(root, controller, lambda: update_manager(manager, "club", "athletes", show),
+                                      manager.move_back,
+                                      manager.move_forward)
 
-    frame_page["club"].grid(row=0, column=0, sticky="nsew")
+        frame_page["club"].grid(row=0, column=0, sticky="nsew")
 
-    show("main")
+        show("main")
 
-    c.make_textmenu(root)
-    root.bind_class("Entry", "<Button-3><ButtonRelease-3>", c.show_textmenu)
-    root.bind_class("Entry", "<Control-a>", lambda event: c.callback_select_all(event, root))
-    root.bind_class("Entry", "<Control-c>", copy)
-    root.bind_class("Entry", "<Control-x>", cut)
-    root.bind_class("Entry", "<Control-p>", paste)
-    root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root, dao))
-    root.mainloop()
+        Cp.make_textmenu(root)
+        root.bind_class("Entry", "<Button-3><ButtonRelease-3>", Cp.show_textmenu)
+        root.bind_class("Entry", "<Control-a>", lambda event: Cp.callback_select_all(event, root))
+        root.bind_class("Entry", "<Control-c>", copy)
+        root.bind_class("Entry", "<Control-x>", cut)
+        root.bind_class("Entry", "<Control-p>", paste)
+        root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root, dao))
+        root.mainloop()
+
 
 
 if __name__ == '__main__':
     log.basicConfig(level=log.INFO, filename="esperos.log", filemode="w",
                     format='[%(asctime)s]:%(levelname)s-%(message)s')
-    try:
-        main()
-    except KeyboardInterrupt as k:
-        dao.close()
-        print(k)
-
+    main()
