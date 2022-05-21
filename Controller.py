@@ -118,6 +118,7 @@ class LogicController:
     def get_person_responsibility(self, name: str, surname: str, new_responsibilities: str) -> int:
         """
         Checks if this person's responsibility has changed.
+
         :param surname: The surname of the person to check.
         :param name: The name of the person to check.
         :param new_responsibilities: the new value for the person's responsibility
@@ -126,3 +127,15 @@ class LogicController:
         value = self.dao.get_person_responsibility(name, surname)
         new_value = float(new_responsibilities)
         return 0 if value == new_value else (1 if new_value < value else 2)
+
+    def get_deletion_information(self, search: str) -> dict:
+        """
+        Retrieves the Person entries to be deleted based on the search string.
+
+        :param search: The search string based on which we narrow down entries.
+        :return: the resulting entries in dictionary form.
+        """
+        return self.dao.get_delete_information(search)
+
+    def delete_person_entry(self, surname: str, name: str, category: str)->None:
+        self.dao.delete_person_entry(surname,name,category)

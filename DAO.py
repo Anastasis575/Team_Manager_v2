@@ -187,7 +187,6 @@ class EsperosConnection:
         query = f"UPDATE Person SET Επώνυμο=\'{data['Επώνυμο']}\',Όνομα=\'{data['Όνομα']}\',Σταθερό=\'{data['Σταθερό']}\'," \
                 f"Κινητό=\'{data['Κινητό']}\',Email=\'{data['Email']}\',Διεύθυνση=\'{data['Διεύθυνση']}\'," \
                 f"Κατηγορία=\'{data['Κατηγορία']}\' WHERE Επώνυμο='{surname}' and Όνομα='{name}'"
-        print(query)
         self.cursor.execute(query)
         self.connection.commit()
         if occ == "Αθλητής/τρια":
@@ -219,3 +218,32 @@ class EsperosConnection:
             return -1.0
         self.connection.commit()
         return rows[0][0]
+
+    def get_delete_information(self, search: str) -> dict:
+        query = "SELECT * FROM PERSON"
+        if search is not None:
+            query += f" WHERE Επώνυμο like '%{search}%' or Όνομα like '%{search}%' or Κατηγορία like '%{search}%'"
+        data = self.cursor.execute(query)
+        des = list(map(lambda c: c[0], data.description))
+        res = data.fetchall()
+        fin = {}
+        if len(res) != 0:
+            fin = list(map(lambda x: dict(zip(des, x)), res))
+        self.connection.commit()
+        return fin
+
+    def delete_person_entry(self, surname: str, name: str, category: str):
+        occ = self.get_occupation(category)
+        if occ == "Αθλητής/τρια":
+            query = f"DELETE FROM Athlete_Data WHERE Επώνυμο='{surname}' and Όνομα='{name}'"
+        else:
+            query = f"DELETE FROM Non_athlete_POI WHERE Επώνυμο='{surname}' and Όνομα='{name}'"
+        self.cursor.execute(query)
+        query = f"DELETE FROM Person WHERE Επώνυμο='{surname}' and Όνομα='{name}'"
+        self.cursor.execute(query)
+        query = f"SELECT * FROM Person WHERE Κατηγορία='{category}'"
+        last = self.cursor.execute(query)
+        if len(last.fetchall()) == 0:
+            query = f"DELETE FROM Category WHERE Κατηγορία='{category}'"
+            self.cursor.execute(query)
+        self.connection.commit()

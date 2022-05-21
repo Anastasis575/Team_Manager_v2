@@ -5,6 +5,7 @@ from tkinter import ttk
 from PIL import ImageTk, Image
 
 import Controller
+from DeleteAthleteFrame import DeleteAthleteFrame
 from ItemList import ItemList, ButtonFrame
 from ProjectList import ProjectList
 
@@ -24,7 +25,6 @@ class AthletePage(tk.Frame):
         self.controller = controller
         self.basicFrame = None
         self.project_frame = None
-        self.deleteEntry = None
         self.go_back = go_back
         self.go_forward = go_forward
         self.init_club = init_club
@@ -77,7 +77,7 @@ class AthletePage(tk.Frame):
 
         # Delete button, to delete an existing entry
         self.deleteButton = tk.Button(self.subHeaderFrame, bg="#494949", text="Διαγραφή Υπάρχουσας \nΕγγραφής",
-                                      command=self.deleteEntry, borderwidth=0)
+                                      command=self.delete_entry, borderwidth=0)
         self.deleteButton.config(font=("Arial", 16), fg="#fff")
         self.deleteButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.45)
 
@@ -124,6 +124,7 @@ class AthletePage(tk.Frame):
         # Main data frame for objects
         self.project_frame = tk.Frame(above_frame, bg="red")
         self.project_frame.grid(row=0, column=0, sticky="nsew")
+
         self.basicFrame = tk.Frame(above_frame, bg="#1b2135")
         self.basicFrame.grid(row=0, column=0, sticky="nsew")
         self.main_athlete_canvas = tk.Canvas(self.basicFrame)
@@ -142,6 +143,9 @@ class AthletePage(tk.Frame):
         self.POI_data_frame = ButtonFrame(above_frame, self.controller, self.revert, self.disable_options,
                                           "Ενδιαφερόμενος/η", )
         self.POI_data_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.delete_frame = DeleteAthleteFrame(above_frame, self.controller, self.revert, self.disable_options)
+        self.delete_frame.grid(row=0, column=0, sticky="nsew")
 
         self.listFrame = ItemList(self.athlete_data_frame, self.POI_data_frame, self.controller, self, "#e2e2e2")
 
@@ -224,6 +228,7 @@ class AthletePage(tk.Frame):
 
         :return: None
         """
+        self.update_categories()
         self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
         self.typeVar.set("Στοιχεία")
         self.type["state"] = tk.DISABLED
@@ -232,6 +237,9 @@ class AthletePage(tk.Frame):
         self.createButton["state"] = tk.NORMAL
         self.deleteButton["state"] = tk.NORMAL
         self.project_button["state"] = tk.NORMAL
+        self.delete_frame.clear_delete_input()
+        self.delete_frame.refresh_deleted(0)
+        self.update_form(0)
         self.basicFrame.tkraise()
 
     def update_values(self) -> None:
@@ -296,3 +304,20 @@ class AthletePage(tk.Frame):
     def panel_destroy(self):
         self.revert()
         self.top.destroy()
+
+    def delete_entry(self):
+        self.disable_options()
+        self.delete_frame.tkraise()
+
+    def update_categories(self):
+        self.forms["menu"].delete(0, 'end')
+        self.forms["menu"].add_command(label="Επιλέξτε μια κατηγορία μέλους",
+                                       command=lambda value="Επιλέξτε μια κατηγορία μέλους": self.set_form(value))
+        data = self.controller.get_categories_no_coach()
+        for column in data:
+            self.forms["menu"].add_command(label=column, command=lambda value=column: self.set_form(value))
+        self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
+
+    def set_form(self, value):
+        self.formVar.set(value)
+        self.update_form(value)
