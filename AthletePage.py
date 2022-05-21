@@ -71,7 +71,7 @@ class AthletePage(tk.Frame):
 
         # Create button, to create a new entry
         self.createButton = tk.Button(self.subHeaderFrame, bg="#494949", text="Δημιουργία Καινούργιας \nΕγγραφής",
-                                      command=self.controller.create_entry, borderwidth=0)
+                                      command=self.create_person, borderwidth=0)
         self.createButton.config(font=("Arial", 16), fg="#fff")
         self.createButton.place(relwidth=0.2, relheight=0.15, relx=0.025, rely=0.27)
 
@@ -98,9 +98,10 @@ class AthletePage(tk.Frame):
         attributes = self.controller.get_person_attributes(
             self.formVar.get() if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους" else None)
         for column in attributes:
-            if str(column) != "Όνομα" or str(column) != "Επώνυμο" or str(column) != "Τελευταία_πληρωμή" or \
-                    str(column) != "Ημερομηνία_Δημιουργίας" or str(column) != "Κατάσταση":
-                self.typeOptions.append(str(column))
+            if str(column) != "Όνομα" and str(column) != "Κατηγορία" and str(column) != "Επώνυμο" \
+                    and str(column) != "Τελευταία_πληρωμή" and str(column) != "Ημερομηνία_Δημιουργίας" and \
+                    str(column) != "Κατάσταση":
+                self.typeOptions.append(str(column.replace("_", " ")))
         self.typeVar = tk.StringVar(self.subHeaderFrame)
         self.typeVar.set(self.typeOptions[0])
         self.type = tk.OptionMenu(self.headerFrame, self.typeVar, *self.typeOptions, command=self.update_values())
@@ -201,9 +202,12 @@ class AthletePage(tk.Frame):
             self.type["menu"].delete(0, 'end')
             self.type["menu"].add_command(label="Στοιχεία", command=lambda value="Στοιχεία": self.update_entry(value))
             for column in tempdata:
-                if str(column) != "Όνομα" or str(column) != "Επώνυμο" or str(column) != "Τελευταία_πληρωμή" or \
-                        str(column) != "Ημερομηνία_Δημιουργίας" or str(column) != "Κατάσταση":
-                    self.type["menu"].add_command(label=column, command=lambda value=column: self.update_entry(value))
+                if str(column) != "Όνομα" and str(column) != "Κατηγορία" and str(column) != "Επώνυμο" \
+                        and str(column) != "Τελευταία_πληρωμή" and str(column) != "Ημερομηνία_Δημιουργίας" and \
+                        str(column) != "Κατάσταση":
+                    self.type["menu"].add_command(label=column.replace("_", " "),
+                                                  command=lambda value=column: self.update_entry(
+                                                      value))
             self.typeVar.set("Στοιχεία")
             if self.formVar.get() != "Επιλέξτε μια κατηγορία μέλους":
                 self.listFrame.update_list(self.formVar.get(),
@@ -222,7 +226,7 @@ class AthletePage(tk.Frame):
         """
         self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
         self.typeVar.set("Στοιχεία")
-        self.type["state"] = tk.NORMAL
+        self.type["state"] = tk.DISABLED
         self.forms["state"] = tk.NORMAL
         self.cancel_button["state"] = tk.DISABLED
         self.createButton["state"] = tk.NORMAL
@@ -252,27 +256,43 @@ class AthletePage(tk.Frame):
 
     def create_person(self):
         """
+        A callback to decide the type of person you want to create.
 
-        :return:
+        :return: None.
         """
-        self.top=tk.Toplevel(self.root,bg="#1b2135")
+        self.revert()
+        self.disable_options()
+        self.top = tk.Toplevel(self.root, bg="#b3b3b3")
         self.top.geometry("500x200")
-        self.top.resizable(True,True)
-        self.w_c["Create"]=self.top
+        self.top.resizable(True, True)
         self.top.title("Είδος Νέου Μέλους")
-        frame=tk.Frame(self.top,bg="#1b2135")
-        frame.pack(fill=tk.BOTH,expand=True)
-        label=tk.Label(frame,text="Επιλεξτε το είδος του νέου μέλους")
-        label.config(font=("Arial",18))
+        frame = tk.Frame(self.top, bg="#b3b3b3")
+        frame.pack(fill=tk.BOTH, expand=True)
+        label = tk.Label(frame, text="Επιλεξτε το είδος του νέου μέλους")
+        label.config(font=("Arial", 18))
         label.pack(anchor=tk.CENTER)
-        options=["Αθλητής/τρια","Προπονητικό Team","Χορηγός","Θεατής","Παλαιός Αθλητής","Παθητικό Μέλος","Γονέας"]
-        self.tempvar=tk.StringVar(frame)
+        options = ["Αθλητής/τρια", "Προπονητικό Team", "Χορηγός", "Θεατής", "Παλαιός Αθλητής", "Παθητικό Μέλος",
+                   "Γονέας"]
+        self.tempvar = tk.StringVar(frame)
         self.tempvar.set("Ιδιότητα")
-        self.choicebox=tk.OptionMenu(frame,self.tempvar,"Ιδιότητα",*options,command=self.create())
-        self.choicebox.config(font=("Arial",18))
-        self.choicebox["menu"].config(font=("Arial",18))
+        self.choicebox = tk.OptionMenu(frame, self.tempvar, "Ιδιότητα", *options, command=self.create)
+        self.choicebox.config(font=("Arial", 18))
+        self.choicebox["menu"].config(font=("Arial", 18))
         self.choicebox.pack(anchor=tk.CENTER)
-        self.listFrame.disableAll()
+        self.top.protocol("WM_DELETE_WINDOW", lambda: self.panel_destroy)
+        # self.listFrame.disableAll()
         self.top.mainloop()
-    def create(self):
-        if self.tempvar.get()!="":
+
+    def create(self, value):
+        if value != "Ιδιότητα":
+            self.disable_options()
+            self.panel_destroy()
+            if value == "Αθλητής/τρια":
+                self.athlete_data_frame.clear()
+            else:
+                self.POI_data_frame.clear()
+                self.POI_data_frame.catvar.set(value)
+
+    def panel_destroy(self):
+        self.revert()
+        self.top.destroy()

@@ -100,16 +100,17 @@ class LogicController:
         fetched = self.dao.get_person_info(surname, name, occ)
         return fetched
 
-    def create_person_entry(self, surname: str, name: str, data: dict) -> None:
+    def create_person_entry(self, surname: str, name: str, occ: str, data: dict) -> None:
         """
         Callback to call the dao object and insert the ney person entry.
 
+        :param occ: the occupation of the inserted person
         :param surname: The surname of the person.
         :param name: The name of the person
         :param data: The dictionary with the person's data
         :return: None.
         """
-        self.dao.create_person_entry(surname, name, data)
+        self.dao.create_person_entry(surname, name, occ, data)
 
     def update_person_info(self, surname: str, name: str, data: dict) -> None:
         self.dao.update_person_entry(surname, name, data)
@@ -124,4 +125,4 @@ class LogicController:
         """
         value = self.dao.get_person_responsibility(name, surname)
         new_value = float(new_responsibilities)
-        return 0 if value == new_value else (1 if new_value<value else 2)
+        return 0 if value == new_value else (1 if new_value < value else 2)

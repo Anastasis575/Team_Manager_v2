@@ -66,7 +66,7 @@ class EsperosConnection:
         self.connection.commit()
         data = rows.fetchall()
         if len(data) == 0:
-            return data
+            return ""
         else:
             return data[0][0]
 
@@ -140,22 +140,26 @@ class EsperosConnection:
         self.connection.commit()
         return dict(zip(des, res))
 
-    def create_person_entry(self, surname: str, name: str, data: dict) -> None:
+    def create_person_entry(self, surname: str, name: str, occ: str, data: dict) -> None:
         """
         The method to insert the entry of a new person to the corresponding tables.
 
+        :param occ: the default occupation
         :param surname: Surname of the new person entry.
         :param name: Name of the new person entry
         :param data: The object with the information of the new person entry
         :return: None.
         """
-        occ = self.get_occupation(data["Κατηγορία"])
-
+        ret_occ = self.get_occupation(data["Κατηγορία"])
+        if ret_occ == "":
+            query = f"INSERT INTO Category VALUES('{data['Κατηγορία']}','{occ}')"
+            self.cursor.execute(query)
+        ret_occ = occ
         query = f"INSERT INTO Person VALUES(\'{data['Επώνυμο']}\',\'{data['Όνομα']}\',\'{data['Σταθερό']}\'," \
                 f"\'{data['Κινητό']}\',\'{data['Email']}\',\'{data['Διεύθυνση']}\',\'{data['Κατηγορία']}\'," \
-                f"\'{data['Ημερομηνία_δημιουργίας']}\')"
+                f"\'{data['Ημερομηνία_Δημιουργίας']}\')"
         self.cursor.execute(query)
-        if occ == "Αθλητής/τρια":
+        if ret_occ == "Αθλητής/τρια":
             query = f"INSERT INTO Athlete_Data VALUES(\'{data['Επώνυμο']}\',\'{data['Όνομα']}\',\'{data['Έτος']}\'," \
                     f"\'{data['Ύψος']}\',\'{data['Ενεργά_χρόνια']}\',\'{data['Προπονητής']}\'," \
                     f"\'{data['Δωρεάν_μπλούζες']}\',\'{data['Χρεωμένες_μπλούζες']}\',\'{data['Ποσό_για_Μπλούζες']}\'," \
