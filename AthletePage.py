@@ -6,6 +6,7 @@ from PIL import ImageTk, Image
 
 import Controller
 from DeleteAthleteFrame import DeleteAthleteFrame
+from CategoryEditFrame import CategoryEditFrame
 from ItemList import ItemList, ButtonFrame
 from ProjectList import ProjectList
 
@@ -21,7 +22,7 @@ class AthletePage(tk.Frame):
         :param go_forward: a callback function for going to the next page
         """
         super().__init__(root, bg="#4e73c2")
-        self.listFrame: ItemList = None
+        self.listFrame: ItemList | None = None
         self.controller = controller
         self.basicFrame = None
         self.project_frame = None
@@ -93,6 +94,10 @@ class AthletePage(tk.Frame):
         self.forms['menu'].config(font=("Arial", 18), bg="#c1c1c1")
         self.forms.place(relwidth=0.25, relheight=0.1, relx=0.58, rely=0.75)
 
+        self.cat_change_button = tk.Button(self.headerFrame, text="...", bg="#494949", command=self.change_categories)
+        self.cat_change_button.config(font=("Arial", 18), bg="#c1c1c1")
+        self.cat_change_button.place(relwidth=0.03, relheight=0.1, relx=0.84, rely=0.75)
+
         # List of data options for which attribute to look for
         self.typeOptions = ["Στοιχεία"]
         attributes = self.controller.get_person_attributes(
@@ -136,23 +141,30 @@ class AthletePage(tk.Frame):
                                       lambda e: self.main_athlete_canvas.configure(
                                           scrollregion=self.main_athlete_canvas.bbox("all")))
 
+        # Athlete info editing frame
         self.athlete_data_frame = ButtonFrame(above_frame, self.controller, self.revert, self.disable_options,
                                               "Αθλητής/τρια")
         self.athlete_data_frame.grid(row=0, column=0, sticky="nsew")
 
+        # Non-athlete info editing frame
         self.POI_data_frame = ButtonFrame(above_frame, self.controller, self.revert, self.disable_options,
                                           "Ενδιαφερόμενος/η", )
         self.POI_data_frame.grid(row=0, column=0, sticky="nsew")
 
+        # People entry delete frame
         self.delete_frame = DeleteAthleteFrame(above_frame, self.controller, self.revert, self.disable_options)
         self.delete_frame.grid(row=0, column=0, sticky="nsew")
 
+        # Main person inspection frame
         self.listFrame = ItemList(self.athlete_data_frame, self.POI_data_frame, self.controller, self, "#e2e2e2")
 
         # self.listFrame = tk.Frame(self.mainCanvas, bg="#1b2135")
         self.main_athlete_canvas.create_window((0, 0), window=self.listFrame, anchor=tk.NW, width=1200,
                                                height=1330)  # Be Careful
+        self.category_frame = CategoryEditFrame(above_frame, self.controller, self.revert, self.disable_options)
+        self.category_frame.grid(row=0, column=0, sticky="nsew")
 
+        # Responsibility inspection frame
         self.projection = ProjectList(self.controller, self.project_frame)
         self.projection.pack(expand=True, fill=tk.BOTH)
         self.project_button = tk.Button(self.subHeaderFrame, bg="#494949", fg="#fff",
@@ -239,6 +251,8 @@ class AthletePage(tk.Frame):
         self.project_button["state"] = tk.NORMAL
         self.delete_frame.clear_delete_input()
         self.delete_frame.refresh_deleted(0)
+        self.controller.clear_categories()
+        self.update_categories()
         self.update_form(0)
         self.basicFrame.tkraise()
 
@@ -291,7 +305,13 @@ class AthletePage(tk.Frame):
         # self.listFrame.disableAll()
         self.top.mainloop()
 
-    def create(self, value):
+    def create(self, value) -> None:
+        """
+        Callback to begin the creation of a new Person entry.
+
+        :param value: The type of person we chose to create.
+        :return: None.
+        """
         if value != "Ιδιότητα":
             self.disable_options()
             self.panel_destroy()
@@ -301,15 +321,30 @@ class AthletePage(tk.Frame):
                 self.POI_data_frame.clear()
                 self.POI_data_frame.catvar.set(value)
 
-    def panel_destroy(self):
+    def panel_destroy(self) -> None:
+        """
+        A callback to destroy the new person category widget.
+
+        :return: None.
+        """
         self.revert()
         self.top.destroy()
 
-    def delete_entry(self):
+    def delete_entry(self) -> None:
+        """
+        Callback to move to the person delete frame.
+
+        :return: None.
+        """
         self.disable_options()
         self.delete_frame.tkraise()
 
-    def update_categories(self):
+    def update_categories(self) -> None:
+        """
+        Callback to update viewing athletes, so that the ui is updated at all times.
+
+        :return: None.
+        """
         self.forms["menu"].delete(0, 'end')
         self.forms["menu"].add_command(label="Επιλέξτε μια κατηγορία μέλους",
                                        command=lambda value="Επιλέξτε μια κατηγορία μέλους": self.set_form(value))
@@ -318,6 +353,20 @@ class AthletePage(tk.Frame):
             self.forms["menu"].add_command(label=column, command=lambda value=column: self.set_form(value))
         self.formVar.set("Επιλέξτε μια κατηγορία μέλους")
 
-    def set_form(self, value):
+    def set_form(self, value) -> None:
+        """
+        Callback to return the category option menu to default and reloading callback.
+
+        :param value: a non-used event variable from the tk command section.
+        :return: None.
+        """
         self.formVar.set(value)
         self.update_form(value)
+
+    def change_categories(self) -> None:
+        """
+        A callback to initialize the category edit page.
+
+        :return: None
+        """
+        self.category_frame.enabled()

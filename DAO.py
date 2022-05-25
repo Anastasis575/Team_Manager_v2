@@ -170,7 +170,7 @@ class EsperosConnection:
         self.cursor.execute(query)
         self.connection.commit()
 
-    def update_person_entry(self, name: str, surname: str, data: dict) -> None:
+    def update_person_entry(self, name: str, surname: str, def_occ: str, data: dict) -> None:
         """
         Update method for the person entry.
 
@@ -180,6 +180,13 @@ class EsperosConnection:
         :return: None.
         """
         occ = self.get_occupation(data["Κατηγορία"])
+        self.clear_categories()
+        if occ == "":
+            query = f"INSERT INTO Category VALUES ('{data['Κατηγορία']}','{def_occ}')"
+            self.cursor.execute(query)
+            self.connection.commit()
+            occ = def_occ
+
         extra = ""
         if "Κατάσταση" in data.keys():
             extra = f",Τελευταία_πληρωμή=\'{data['Τελευταία_πληρωμή']}\',Κατάσταση=\'{data['Κατάσταση']}\'"
@@ -233,6 +240,14 @@ class EsperosConnection:
         return fin
 
     def delete_person_entry(self, surname: str, name: str, category: str):
+        """
+        Delete a person entry based on their full name and category.
+
+        :param surname: The surname of the entry to be deleted.
+        :param name: The name of the entry to be deleted
+        :param category: The name of the category of the person to be deleted
+        :return: None.
+        """
         occ = self.get_occupation(category)
         if occ == "Αθλητής/τρια":
             query = f"DELETE FROM Athlete_Data WHERE Επώνυμο='{surname}' and Όνομα='{name}'"
@@ -247,3 +262,40 @@ class EsperosConnection:
             query = f"DELETE FROM Category WHERE Κατηγορία='{category}'"
             self.cursor.execute(query)
         self.connection.commit()
+
+    def get_athlete_categories(self, no_coach: bool) -> list:
+        """
+        Getter for all the athlete_categories that can be edited
+        :param no_coach: a boolean value whether to include the coach entries
+        :return: The list of athlete category names.
+        """
+        query = f"SELECT Κατηγορία FROM Category WHERE Απασχόληση='Αθλητής/τρια'"
+        res = self.cursor.execute(query).fetchall()
+        self.connection.commit()
+        if len(res) == 0:
+            return res
+        else:
+            return list(map(lambda x: x[0], res))
+
+    def rename_category(self, old_name: str, new_name: str) -> None:
+        query = f"SELECT Κατηγορία FROM Category WHERE Κατηγορία='{new_name}'"
+        res = self.cursor.execute(query).fetchall()
+        if len(res) == 0:
+            query = f"UPDATE Category SET Κατηγορία='{new_name}' WHERE Κατηγορία='{old_name}' "
+        else:
+            query = f"DELETE FROM Category WHERE Κατηγορία='{old_name}' "
+        self.cursor.execute(query)
+        self.connection.commit()
+        query = f"UPDATE Person SET Κατηγορία='{new_name}' WHERE Κατηγορία='{old_name}'"
+        self.cursor.execute(query)
+        self.connection.commit()
+
+    def clear_categories(self):
+        query = "SELECT Κατηγορία FROM Category WHERE Κατηγορία NOT IN (SELECT DISTINCT Κατηγορία FROM Person)"
+        res = self.cursor.execute(query).fetchall()
+        if len(res) == 0:
+            return
+        for i in list(map(lambda x: x[0], res)):
+            query = f"DELETE FROM Category WHERE Κατηγορία='{i}'"
+            self.cursor.execute(query)
+            self.connection.commit()

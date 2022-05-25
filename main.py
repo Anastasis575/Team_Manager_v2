@@ -59,7 +59,7 @@ def cut(event):
     event.widget.event_generate("<<Cut>>")
 
 
-def exit_w(root: tk.Tk, dao: EsperosConnection) -> None:
+def exit_w(root: tk.Tk) -> None:
     """
     On exit callback
 
@@ -117,7 +117,7 @@ def main() -> None:
         root.bind_class("Entry", "<Control-c>", copy)
         root.bind_class("Entry", "<Control-x>", cut)
         root.bind_class("Entry", "<Control-p>", paste)
-        root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root, dao))
+        root.protocol("WM_DELETE_WINDOW", lambda: exit_w(root))
         root.mainloop()
 
 

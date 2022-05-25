@@ -112,8 +112,8 @@ class LogicController:
         """
         self.dao.create_person_entry(surname, name, occ, data)
 
-    def update_person_info(self, surname: str, name: str, data: dict) -> None:
-        self.dao.update_person_entry(surname, name, data)
+    def update_person_info(self, surname: str, name: str, occ: str, data: dict) -> None:
+        self.dao.update_person_entry(surname, name, occ, data)
 
     def get_person_responsibility(self, name: str, surname: str, new_responsibilities: str) -> int:
         """
@@ -137,5 +137,14 @@ class LogicController:
         """
         return self.dao.get_delete_information(search)
 
-    def delete_person_entry(self, surname: str, name: str, category: str)->None:
-        self.dao.delete_person_entry(surname,name,category)
+    def delete_person_entry(self, surname: str, name: str, category: str) -> None:
+        self.dao.delete_person_entry(surname, name, category)
+
+    def get_athlete_categories_no_coach(self):
+        return self.dao.get_athlete_categories(True)
+
+    def rename_category(self, old_name: str, new_name: str) -> None:
+        self.dao.rename_category(old_name, new_name)
+
+    def clear_categories(self):
+        self.dao.clear_categories()

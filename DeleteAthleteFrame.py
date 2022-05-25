@@ -77,5 +77,5 @@ class DeleteAthleteFrame(tk.Frame):
             self.controller.delete_person_entry(*self.treeview.item(item, option="values"))
         self.return_callback()
 
-    def empty_input(self,value):
+    def empty_input(self, value):
         self.deleteVariable.set("")

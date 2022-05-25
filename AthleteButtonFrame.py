@@ -168,7 +168,7 @@ class ButtonFrame(tk.Frame):
             if i == "Ενεργά_χρόνια" or i == "Δωρεάν_μπλούζες" or i == "Χρεωμένες_μπλούζες":
                 data[i] = int(self.entries[i].get() if self.entries[i].get() != "" else "0")
                 continue
-            elif i == "Ύψος" or i == "Ποσό_για_μπλούζες" or i == "Υποχρεώσεις":
+            elif i == "Ύψος" or i == "Ποσό_για_Μπλούζες" or i == "Υποχρεώσεις":
                 data[i] = float(self.entries[i].get() if self.entries[i].get() != "" else "0")
                 continue
             data[i] = self.entries[i].get() if self.entries[i].get() != "" else "-"
@@ -187,7 +187,7 @@ class ButtonFrame(tk.Frame):
                                                                  data["Υποχρεώσεις"]) > 0:
                         data["Κατάσταση"] = 2 if data["Υποχρεώσεις"] > 0 else 1
                         data["Τελευταία_πληρωμή"] = Timestamp.now()
-                self.controller.update_person_info(data["Όνομα"], data["Επώνυμο"], data)
+                self.controller.update_person_info(data["Όνομα"], data["Επώνυμο"],self.occ, data)
 
         else:
             mb.showinfo("Σφάλμα", "Τα πεδία Όνομα, Επώνυμο και Κατηγορία πρέπει να έχουν τιμή")
